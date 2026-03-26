@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TERMINAL DE DETONACIÓN V.2.0</title>
+    <style>
+        :root { --red: #ff4d4d; --dark-red: #330000; --glow: 0 0 15px #ff0000; }
+        body { 
+            background: #050505; color: var(--red); font-family: 'Courier New', Courier, monospace;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; margin: 0; overflow: hidden; text-transform: uppercase;
+        }
+        .scanline {
+            width: 100%; height: 2px; background: rgba(255, 0, 0, 0.1);
+            position: absolute; top: 0; z-index: 10; animation: scan 4s linear infinite;
+        }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        #display-container {
+            border: 2px solid var(--red); padding: 20px; box-shadow: var(--glow);
+            background: rgba(20, 0, 0, 0.8); border-radius: 10px; text-align: center;
+            width: 90%; max-width: 350px; position: relative;
+        }
+        .warning { font-size: 0.8rem; margin-bottom: 10px; letter-spacing: 2px; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        #timer { font-size: 4.5rem; font-weight: 900; margin: 15px 0; text-shadow: var(--glow); }
+
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .key {
+            background: var(--dark-red); border: 1px solid var(--red); color: var(--red);
+            padding: 15px; font-size: 1.2rem; cursor: pointer; transition: 0.2s;
+            border-radius: 5px; font-weight: bold;
+        }
+        .key:active { background: var(--red); color: #000; box-shadow: var(--glow); }
+        
+        #code-display {
+            background: #000; border: 1px inset var(--red); height: 40px;
+            margin-bottom: 15px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; letter-spacing: 10px;
+        }
+        .status-msg { height: 20px; font-size: 0.7rem; margin-top: 10px; color: #fff; }
+
+        /* Pantalla de Explosión */
+        #boom {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff; color: #000; z-index: 100; flex-direction: column;
+            align-items: center; justify-content: center; font-size: 3rem; font-weight: 900;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+
+    <div id="display-container">
+        <div class="warning">⚠️ PELIGRO: SECUENCIA ACTIVA ⚠️</div>
+        <div id="timer">00:45</div>
+        
+        <div id="code-display"></div>
+
+        <div class="keypad">
+            <div class="key" onclick="press('1')">1</div><div class="key" onclick="press('2')">2</div><div class="key" onclick="press('3')">3</div>
+            <div class="key" onclick="press('4')">4</div><div class="key" onclick="press('5')">5</div><div class="key" onclick="press('6')">6</div>
+            <div class="key" onclick="press('7')">7</div><div class="key" onclick="press('8')">8</div><div class="key" onclick="press('9')">9</div>
+            <div class="key" style="background:transparent; border:none"></div>
+            <div class="key" onclick="press('0')">0</div>
+            <div class="key" onclick="clearCode()" style="font-size: 0.8rem;">CLR</div>
+        </div>
+        <div id="msg" class="status-msg">ESPERANDO CÓDIGO...</div>
+    </div>
+
+    <div id="boom">SISTEMA COMPROMETIDO<br>💥 BOOM 💥</div>
+
+    <script>
+        const CORRECT_CODE = "7412"; // CAMBIA EL CÓDIGO AQUÍ
+        let timeLeft = 45; 
+        let currentInput = "";
+        let active = true;
+
+        const timerEl = document.getElementById('timer');
+        const codeEl = document.getElementById('code-display');
+        const msgEl = document.getElementById('msg');
+        const boomEl = document.getElementById('boom');
+
+        const countdown = setInterval(() => {
+            if (!active) return;
+            timeLeft--;
+            let s = timeLeft < 10 ? '0' + timeLeft : timeLeft;
+            timerEl.innerText = `00:${s}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                triggerExplosion();
+            }
+        }, 1000);
+
+        function press(num) {
+            if (!active || currentInput.length >= 4) return;
+            currentInput += num;
+            updateDisplay();
+            if (currentInput.length === 4) checkCode();
+        }
+
+        function clearCode() {
+            currentInput = "";
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            codeEl.innerText = "*".repeat(currentInput.length);
+        }
+
+        function checkCode() {
+            if (currentInput === CORRECT_CODE) {
+                active = false;
+                clearInterval(countdown);
+                msgEl.innerText = "ACCESO CONCEDIDO - DESARMADO";
+                msgEl.style.color = "#00ff00";
+                timerEl.style.color = "#00ff00";
+                timerEl.innerText = "SAFE";
+                alert("BOMBA DESACTIVADA");
+            } else {
+                msgEl.innerText = "CÓDIGO ERRÓNEO - PENALIZACIÓN";
+                currentInput = "";
+                timeLeft = Math.max(0, timeLeft - 5); // Resta 5 segundos por error
+                setTimeout(() => { if(active) msgEl.innerText = "ESPERANDO CÓDIGO..."; }, 2000);
+                updateDisplay();
+            }
+        }
+
+        function triggerExplosion() {
+            boomEl.style.display = "flex";
+            // Aquí podrías añadir un sonido de explosión si lo deseas
+        }
+    </script>
+</body>
+</html>
