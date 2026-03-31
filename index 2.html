@@ -3,197 +3,631 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.B.A.P. - Ministerio del Interior</title>
+    <title>UDEX - Enlace Táctico I.E.D.</title>
     <style>
+        :root {
+            --primary: #33ff33;
+            --danger: #ff3333;
+            --bg-dark: #050505;
+            --panel-bg: #111;
+        }
+
         body {
-            background-color: #050505;
-            color: #33ff33;
+            background-color: var(--bg-dark);
+            color: var(--primary);
             font-family: 'Consolas', 'Courier New', monospace;
-            padding: 20px;
             margin: 0;
+            padding: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
         }
-        .container {
-            width: 100%;
-            max-width: 750px;
-            border: 1px solid #33ff33;
-            padding: 30px;
-            background-color: #0a0a0a;
-            box-shadow: 0 0 15px rgba(51, 255, 51, 0.1);
-        }
-        .header {
-            text-align: center;
-            border-bottom: 1px dashed #33ff33;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 20px;
-            letter-spacing: 2px;
-        }
-        .header p {
-            margin: 5px 0 0 0;
-            font-size: 13px;
-            color: #888;
-        }
-        .input-group {
+
+        #boot-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-dark);
+            z-index: 1000;
             display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
+            flex-direction: column;
+            padding: 40px;
+            box-sizing: border-box;
+            font-size: 14px;
+            line-height: 1.5;
         }
-        input[type="text"] {
-            flex-grow: 1;
-            background-color: #000;
-            color: #33ff33;
-            border: 1px solid #33ff33;
-            padding: 12px;
-            font-family: inherit;
-            font-size: 16px;
+
+        #main-interface {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header-panel {
+            text-align: center;
+            border: 1px solid var(--danger);
+            background-color: rgba(255, 51, 51, 0.1);
+            padding: 15px;
+            width: 100%;
+            margin-bottom: 15px;
+            box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.2);
+        }
+
+        .header-panel h1 {
+            color: var(--danger);
+            margin: 0 0 5px 0;
+            font-size: 22px;
+            letter-spacing: 4px;
             text-transform: uppercase;
+        }
+
+        .timer-container {
+            background-color: var(--panel-bg);
+            border: 2px solid var(--primary);
+            padding: 10px 30px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .timer {
+            font-size: 50px;
+            color: var(--danger);
+            font-weight: bold;
+            text-shadow: 0 0 15px var(--danger);
+            margin: 0;
+            letter-spacing: 5px;
+        }
+
+        /* --- PANEL DE SEGURIDAD (ENA) --- */
+        .auth-panel {
+            background-color: #1a1a1a;
+            border: 2px dashed #666;
+            padding: 15px 30px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        .auth-panel.success {
+            border-color: var(--primary);
+            border-style: solid;
+            background-color: rgba(51, 255, 51, 0.05);
+        }
+
+        .auth-title {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .auth-panel.success .auth-title {
+            color: var(--primary);
+        }
+
+        .auth-input {
+            background-color: #000;
+            color: var(--primary);
+            border: 1px solid #444;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            text-align: center;
+            width: 120px;
+            padding: 5px;
+            margin-right: 15px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
             outline: none;
         }
-        input[type="text"]:focus {
-            box-shadow: 0 0 8px rgba(51, 255, 51, 0.4);
+
+        .auth-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(51,255,51,0.2);
         }
-        button {
-            background-color: #33ff33;
-            color: #000;
-            border: none;
-            padding: 12px 25px;
+
+        .btn-verify {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 10px 20px;
             font-family: inherit;
-            font-size: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .btn-verify:hover {
+            background-color: #555;
+            color: var(--primary);
+        }
+
+        .btn-verify:disabled {
+            background-color: #111;
+            color: #444;
+            cursor: not-allowed;
+            border-color: #222;
+        }
+
+        /* --- MÓDULOS DE CABLES --- */
+        .hardware-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: all 0.5s;
+        }
+
+        /* ESTADO BLOQUEADO DE LOS CABLES */
+        .grid-locked {
+            opacity: 0.2;
+            pointer-events: none;
+            filter: grayscale(100%);
+        }
+
+        .module-box {
+            background-color: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            transition: border-color 0.3s;
+        }
+
+        .module-box.stabilized {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(51, 255, 51, 0.3);
+            pointer-events: none;
+        }
+
+        .module-title {
+            color: #aaa;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+            border-bottom: 1px dashed #444;
+            padding-bottom: 5px;
+        }
+
+        .module-box.stabilized .module-title {
+            color: var(--primary);
+        }
+
+        .wires-container {
+            display: flex;
+            justify-content: space-evenly;
+            gap: 10px;
+        }
+
+        .wire-slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .wire {
+            width: 12px;
+            height: 70px;
+            cursor: pointer;
+            box-shadow: inset -2px 0 4px rgba(0,0,0,0.5), inset 2px 0 4px rgba(255,255,255,0.3);
+            transition: transform 0.1s, filter 0.1s;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .wire:hover {
+            transform: scaleX(1.3);
+            filter: brightness(1.5);
+        }
+
+        .wire.cut {
+            opacity: 0.2;
+            cursor: not-allowed;
+            transform: none !important;
+            filter: grayscale(100%) !important;
+        }
+
+        .wire.cut::after {
+            content: '';
+            position: absolute;
+            top: 45%; left: -4px; width: 20px; height: 10px;
+            background-color: #1a1a1a;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+        }
+
+        .wire-label {
+            margin-top: 8px;
+            font-size: 10px;
+            color: #777;
+            font-weight: bold;
+        }
+
+        .w-red { background: linear-gradient(to right, #990000, #ff1a1a, #990000); }
+        .w-blue { background: linear-gradient(to right, #000099, #1a1aff, #000099); }
+        .w-green { background: linear-gradient(to right, #006600, #00cc00, #006600); }
+        .w-yellow { background: linear-gradient(to right, #999900, #ffff1a, #999900); }
+
+        .terminal-log {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            padding: 10px;
+            height: 90px;
+            overflow-y: auto;
+            font-size: 12px;
+            color: var(--primary);
+        }
+
+        .log-entry { margin: 2px 0; }
+        .log-error { color: var(--danger); }
+        .log-warn { color: #ffff33; }
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        #boom-screen {
+            background-color: #ff0000;
+            color: #fff;
+        }
+
+        #win-screen {
+            background-color: var(--bg-dark);
+            color: var(--primary);
+            border: 8px solid var(--primary);
+        }
+
+        .overlay-title {
+            font-size: 40px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+        }
+
+        .overlay-text {
+            font-size: 16px;
+            line-height: 1.6;
+            max-width: 700px;
+            text-align: justify;
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            border: 1px solid currentColor;
+        }
+
+        .btn-action {
+            margin-top: 30px;
+            padding: 12px 30px;
+            background-color: transparent;
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
         }
-        button:hover {
-            background-color: #28cc28;
-        }
-        #terminal-output {
-            min-height: 250px;
-            font-size: 13px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            border-top: 1px dotted #33ff33;
-            padding-top: 15px;
-        }
-        .alert-roja {
-            color: #ff3333;
-            font-weight: bold;
-        }
-        .codigo-bloque {
-            background-color: #33ff33;
+
+        .btn-action:hover {
+            background-color: #fff;
             color: #000;
-            padding: 2px 6px;
-            font-weight: bold;
-            letter-spacing: 1px;
         }
-        .blink {
-            animation: blinker 1s linear infinite;
-        }
-        @keyframes blinker {
-            50% { opacity: 0; }
-        }
+
+        .blink { animation: blinker 1s step-end infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h1>SISTEMA DE BÚSQUEDA DE ANTECEDENTES POLICIALES</h1>
-            <p>MINISTERIO DEL INTERIOR - UNIDAD DE INTELIGENCIA DE CHICLAYO</p>
-            <p style="color: #ff3333;">NIVEL DE ACCESO REQUERIDO: TÁCTICO</p>
+    <div id="boot-screen">
+        <div id="boot-text"></div>
+    </div>
+
+    <div id="main-interface">
+        <div class="header-panel">
+            <h1>ENLACE TÁCTICO: NÚCLEO I.E.D.</h1>
+            <div class="blink">>> ADVERTENCIA: PRESIÓN DE GAS INESTABLE <<</div>
+            <div style="font-size: 11px; color: #888; margin-top: 5px;">ESTABILICE LOS 6 NODOS DE PURGA PARA ANULAR LA AMENAZA</div>
         </div>
 
-        <div style="margin-bottom: 10px; font-size: 13px;">
-            >> INGRESE EL NOMBRE O APELLIDO DEL OBJETIVO A CONSULTAR:
-        </div>
-        
-        <div class="input-group">
-            <input type="text" id="busqueda" placeholder="Ej. JUAN PEREZ" autocomplete="off">
-            <button onclick="buscarExpediente()">Ejecutar</button>
+        <div class="timer-container">
+            <div class="timer" id="timeDisplay">04:00</div>
         </div>
 
-        <div id="terminal-output">>> ESPERANDO CONSULTA...<span class="blink">_</span></div>
+        <!-- PANEL DE AUTORIZACIÓN ENA -->
+        <div class="auth-panel" id="auth-panel">
+            <div class="auth-title" id="auth-title">MATRIZ PROTEGIDA: INGRESE CLAVE DE FACCIÓN</div>
+            <div>
+                <input type="text" id="faction-code" class="auth-input" maxlength="3" placeholder="---" autocomplete="off">
+                <button class="btn-verify" id="btn-verify" onclick="verificarCodigo()">Desbloquear</button>
+            </div>
+        </div>
+
+        <!-- LA CUADRÍCULA ESTÁ BLOQUEADA POR DEFECTO -->
+        <div class="hardware-grid grid-locked" id="hardware-grid">
+            <div class="module-box" id="mod-A">
+                <div class="module-title">NODO A</div>
+                <div class="wires-container">
+                    <div class="wire-slot"><div class="wire w-red" onclick="cutWire(this, 'A', 1)"></div><div class="wire-label">L1</div></div>
+                    <div class="wire-slot"><div class="wire w-blue" onclick="cutWire(this, 'A', 2)"></div><div class="wire-label">L2</div></div>
+                    <div class="wire-slot"><div class="wire w-green" onclick="cutWire(this, 'A', 3)"></div><div class="wire-label">L3</div></div>
+                    <div class="wire-slot"><div class="wire w-yellow" onclick="cutWire(this, 'A', 4)"></div><div class="wire-label">L4</div></div>
+                </div>
+            </div>
+
+            <div class="module-box" id="mod-B">
+                <div class="module-title">NODO B</div>
+                <div class="wires-container">
+                    <div class="wire-slot"><div class="wire w-red" onclick="cutWire(this, 'B', 1)"></div><div class="wire-label">L1</div></div>
+                    <div class="wire-slot"><div class="wire w-blue" onclick="cutWire(this, 'B', 2)"></div><div class="wire-label">L2</div></div>
+                    <div class="wire-slot"><div class="wire w-green" onclick="cutWire(this, 'B', 3)"></div><div class="wire-label">L3</div></div>
+                    <div class="wire-slot"><div class="wire w-yellow" onclick="cutWire(this, 'B', 4)"></div><div class="wire-label">L4</div></div>
+                </div>
+            </div>
+
+            <div class="module-box" id="mod-C">
+                <div class="module-title">NODO C</div>
+                <div class="wires-container">
+                    <div class="wire-slot"><div class="wire w-red" onclick="cutWire(this, 'C', 1)"></div><div class="wire-label">L1</div></div>
+                    <div class="wire-slot"><div class="wire w-blue" onclick="cutWire(this, 'C', 2)"></div><div class="wire-label">L2</div></div>
+                    <div class="wire-slot"><div class="wire w-green" onclick="cutWire(this, 'C', 3)"></div><div class="wire-label">L3</div></div>
+                    <div class="wire-slot"><div class="wire w-yellow" onclick="cutWire(this, 'C', 4)"></div><div class="wire-label">L4</div></div>
+                </div>
+            </div>
+
+            <div class="module-box" id="mod-D">
+                <div class="module-title">NODO D</div>
+                <div class="wires-container">
+                    <div class="wire-slot"><div class="wire w-red" onclick="cutWire(this, 'D', 1)"></div><div class="wire-label">L1</div></div>
+                    <div class="wire-slot"><div class="wire w-blue" onclick="cutWire(this, 'D', 2)"></div><div class="wire-label">L2</div></div>
+                    <div class="wire-slot"><div class="wire w-green" onclick="cutWire(this, 'D', 3)"></div><div class="wire-label">L3</div></div>
+                    <div class="wire-slot"><div class="wire w-yellow" onclick="cutWire(this, 'D', 4)"></div><div class="wire-label">L4</div></div>
+                </div>
+            </div>
+
+            <div class="module-box" id="mod-E">
+                <div class="module-title">NODO E</div>
+                <div class="wires-container">
+                    <div class="wire-slot"><div class="wire w-red" onclick="cutWire(this, 'E', 1)"></div><div class="wire-label">L1</div></div>
+                    <div class="wire-slot"><div class="wire w-blue" onclick="cutWire(this, 'E', 2)"></div><div class="wire-label">L2</div></div>
+                    <div class="wire-slot"><div class="wire w-green" onclick="cutWire(this, 'E', 3)"></div><div class="wire-label">L3</div></div>
+                    <div class="wire-slot"><div class="wire w-yellow" onclick="cutWire(this, 'E', 4)"></div><div class="wire-label">L4</div></div>
+                </div>
+            </div>
+
+            <div class="module-box" id="mod-F">
+                <div class="module-title">NODO F</div>
+                <div class="wires-container">
+                    <div class="wire-slot"><div class="wire w-red" onclick="cutWire(this, 'F', 1)"></div><div class="wire-label">L1</div></div>
+                    <div class="wire-slot"><div class="wire w-blue" onclick="cutWire(this, 'F', 2)"></div><div class="wire-label">L2</div></div>
+                    <div class="wire-slot"><div class="wire w-green" onclick="cutWire(this, 'F', 3)"></div><div class="wire-label">L3</div></div>
+                    <div class="wire-slot"><div class="wire w-yellow" onclick="cutWire(this, 'F', 4)"></div><div class="wire-label">L4</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="terminal-log" id="log-container">
+            <div class="log-entry">> INICIALIZANDO MATRIZ DE PRESIÓN...</div>
+            <div class="log-entry" style="color: #ff3333;">> ACCESO DENEGADO. REQUERIDA AUTENTICACIÓN DE CÉLULA.</div>
+        </div>
+    </div>
+
+    <div id="boom-screen" class="overlay">
+        <div class="overlay-title">DETONACIÓN CRÍTICA</div>
+        <div class="overlay-text" style="text-align: center; border: none; background: transparent;">
+            SE HA SECCIONADO LA LÍNEA INCORRECTA O EL TIEMPO HA EXPIRADO.<br><br>
+            LA CHISPA ESTÁTICA HA ALCANZADO LA TRONCAL DE ALTA PRESIÓN.<br>
+            PÉRDIDA TOTAL DEL PERÍMETRO.
+        </div>
+        <button class="btn-action" onclick="location.reload()">INICIAR NUEVA SIMULACIÓN</button>
+    </div>
+
+    <div id="win-screen" class="overlay">
+        <div class="overlay-title" style="color: #33ff33;">ARTEFACTO ANULADO</div>
+        <div class="overlay-text">
+            > INFORME DE SISTEMA: Presión de red estabilizada.<br>
+            > La amenaza ha sido neutralizada de manera exitosa. <strong>¡MISIÓN CUMPLIDA!</strong><br><br>
+            
+            <span style="color: #ffff33; font-weight: bold; font-size: 20px;" class="blink">!!! ALERTA TÁCTICA: AMENAZA SECUNDARIA !!!</span><br><br>
+            
+            > Los escáneres acaban de confirmar la existencia de <strong>OTRA BOMBA</strong> oculta en el interior del inmueble.<br>
+            > Por el momento la situación exterior está controlada y el dispositivo se encuentra estable, pero el Comando Conjunto mantiene el estado de <strong>ALERTA MÁXIMA</strong>.<br><br>
+
+            <strong style="color: #fff; font-size: 18px;">ATENCIÓN EQUIPO DE ESPECIALISTAS:</strong><br>
+            El análisis ha concluido, pero la misión real acaba de empezar. Deben dirigirse <strong>FÍSICAMENTE</strong> al interior de las instalaciones para buscar y neutralizar la segunda amenaza antes de que sea tarde.
+        </div>
     </div>
 
     <script>
-        function buscarExpediente() {
-            const inputRaw = document.getElementById('busqueda').value.toUpperCase().trim();
-            const terminal = document.getElementById('terminal-output');
-            
-            // Remover tildes para evitar errores de tipeo del jugador
-            const input = inputRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        // Solución de los nodos
+        const SOLUCION_NODO_A = 2;
+        const SOLUCION_NODO_B = 4;
+        const SOLUCION_NODO_C = 3;
+        const SOLUCION_NODO_D = 2;
+        const SOLUCION_NODO_E = 1;
+        const SOLUCION_NODO_F = 4;
 
-            terminal.innerHTML = ">> ESTABLECIENDO CONEXIÓN SEGURA...\n>> DESENCRIPTANDO EXPEDIENTES...<span class='blink'>_</span>";
+        let matrizDesbloqueada = false;
+        let nodosEstabilizados = 0;
+        let juegoTerminado = false;
+        let tiempoRestante = 240; 
+        let intervaloTimer = null;
+        
+        const displayTiempo = document.getElementById('timeDisplay');
+        const contenedorLog = document.getElementById('log-container');
+
+        const bootText = [
+            "UDEX-OS v4.2.1 cargando...",
+            "Estableciendo enlace remoto con la matriz de presión...",
+            "Bypass de seguridad de nivel 1... COMPLETADO",
+            "Bypass de seguridad de nivel 2... DENEGADO",
+            "ADVERTENCIA: Interfaz bloqueada por protocolo de la facción.",
+            "Iniciando portal de recuperación..."
+        ];
+
+        let bootIndex = 0;
+        const bootDiv = document.getElementById('boot-text');
+
+        function mostrarBoot() {
+            if (bootIndex < bootText.length) {
+                bootDiv.innerHTML += bootText[bootIndex] + "<br>";
+                bootIndex++;
+                setTimeout(mostrarBoot, 200 + Math.random() * 300);
+            } else {
+                setTimeout(() => {
+                    document.getElementById('boot-screen').style.display = 'none';
+                    document.getElementById('main-interface').style.display = 'flex';
+                    document.getElementById('faction-code').focus(); // Auto-focus en el input
+                    iniciarTemporizador();
+                }, 800);
+            }
+        }
+
+        window.onload = () => {
+            mostrarBoot();
+        };
+
+        // Permite usar la tecla Enter para verificar la contraseña
+        document.getElementById("faction-code").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                verificarCodigo();
+            }
+        });
+
+        function verificarCodigo() {
+            if (juegoTerminado || matrizDesbloqueada) return;
+
+            const inputCode = document.getElementById('faction-code').value.trim().toUpperCase();
+
+            if (inputCode === "ENA") {
+                // Éxito: Desbloquear la matriz
+                matrizDesbloqueada = true;
+                
+                const authPanel = document.getElementById('auth-panel');
+                authPanel.classList.add('success');
+                document.getElementById('auth-title').innerText = "AUTORIZACIÓN CONFIRMADA";
+                document.getElementById('faction-code').disabled = true;
+                document.getElementById('btn-verify').disabled = true;
+                document.getElementById('btn-verify').innerText = "ACEPTADO";
+
+                document.getElementById('hardware-grid').classList.remove('grid-locked');
+                
+                agregarLog("> CÓDIGO E.N.A. RECONOCIDO. PROTOCOLOS DE IGNICIÓN ACTIVOS.", "warn");
+                agregarLog("> ESPERANDO DESACTIVACIÓN MANUAL DE LOS 6 NODOS.");
+            } else {
+                // Error en la contraseña
+                document.getElementById('faction-code').value = ""; // Limpiar input
+                agregarLog(`> ERROR DE AUTENTICACIÓN. FACCIÓN DESCONOCIDA: '${inputCode}'`, "error");
+            }
+        }
+
+        function iniciarTemporizador() {
+            intervaloTimer = setInterval(() => {
+                if (juegoTerminado) return;
+
+                tiempoRestante--;
+                
+                let m = Math.floor(tiempoRestante / 60);
+                let s = tiempoRestante % 60;
+                displayTiempo.textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+
+                if (tiempoRestante <= 30) {
+                    displayTiempo.style.color = "#ff0000";
+                }
+
+                if (tiempoRestante <= 0) {
+                    detonarBomba("TIEMPO AGOTADO.");
+                }
+            }, 1000);
+        }
+
+        function agregarLog(mensaje, tipo = "normal") {
+            const div = document.createElement('div');
+            div.className = "log-entry";
+            if (tipo === "error") div.classList.add("log-error");
+            if (tipo === "warn") div.classList.add("log-warn");
+            div.textContent = mensaje;
+            contenedorLog.appendChild(div);
+            contenedorLog.scrollTop = contenedorLog.scrollHeight;
+        }
+
+        function cutWire(elementoCable, nodoNombre, numeroCable) {
+            // Prevenir interacción si no está desbloqueado
+            if (!matrizDesbloqueada || juegoTerminado || elementoCable.classList.contains("cut")) return;
+
+            elementoCable.classList.add("cut");
+
+            let cableCorrecto = false;
+            if(nodoNombre === 'A' && numeroCable === SOLUCION_NODO_A) cableCorrecto = true;
+            if(nodoNombre === 'B' && numeroCable === SOLUCION_NODO_B) cableCorrecto = true;
+            if(nodoNombre === 'C' && numeroCable === SOLUCION_NODO_C) cableCorrecto = true;
+            if(nodoNombre === 'D' && numeroCable === SOLUCION_NODO_D) cableCorrecto = true;
+            if(nodoNombre === 'E' && numeroCable === SOLUCION_NODO_E) cableCorrecto = true;
+            if(nodoNombre === 'F' && numeroCable === SOLUCION_NODO_F) cableCorrecto = true;
+
+            if (cableCorrecto) {
+                let modulo = document.getElementById('mod-' + nodoNombre);
+                modulo.classList.add('stabilized');
+                nodosEstabilizados++;
+                
+                agregarLog(`> NODO ${nodoNombre} ESTABILIZADO CORRECTAMENTE.`);
+
+                if (nodosEstabilizados === 6) {
+                    desactivacionExitosa();
+                }
+            } else {
+                agregarLog(`> ERROR CRÍTICO EN NODO ${nodoNombre}: LÍNEA ${numeroCable} INCORRECTA.`, "error");
+                detonarBomba();
+            }
+        }
+
+        function detonarBomba() {
+            juegoTerminado = true;
+            clearInterval(intervaloTimer);
+            
+            document.body.style.backgroundColor = "#fff";
             
             setTimeout(() => {
-                if (input === 'IGNACIO MONTENEGRO' || input === 'IGNACIO' || input === 'MONTENEGRO') {
-                    terminal.innerHTML = `>> EXPEDIENTE CLASIFICADO ENCONTRADO.
+                document.getElementById('main-interface').style.display = 'none';
+                document.body.style.backgroundColor = "#000";
+                document.getElementById('boom-screen').style.display = 'flex';
+            }, 150);
+        }
 
-<strong>NOMBRES:</strong> IGNACIO
-<strong>APELLIDOS:</strong> MONTENEGRO
-<strong>ESTADO:</strong> PRÓFUGO / LÍDER IDEOLÓGICO
-<strong>DOMICILIO DECLARADO:</strong> AVENIDA GRAU N° 880
-
->> VULNERACIÓN DE RED AUTORIZADA: Extrayendo metadatos vinculados al enrutador de la bóveda subterránea...
-
-<span class="alert-roja">>> ADVERTENCIA: CLAVE CRIPTOGRÁFICA FRAGMENTADA.</span>
->> EXTRACCIÓN DEL BLOQUE [1 DE 4] COMPLETADA: <span class="codigo-bloque">ALFA</span><span class="blink">_</span>`;
-                } 
-                else if (input === 'SAMUEL ORTIZ' || input === 'SAMUEL' || input === 'ORTIZ') {
-                    terminal.innerHTML = `>> EXPEDIENTE ENCONTRADO.
-
-<strong>NOMBRES:</strong> SAMUEL
-<strong>APELLIDOS:</strong> ORTIZ
-<strong>ESTADO:</strong> INVESTIGADO / FONDOS CONGELADOS
-<strong>VÍNCULO:</strong> PROPIETARIO DE IMPRENTA COMERCIAL
-
->> VULNERACIÓN DE RED AUTORIZADA: Extrayendo metadatos vinculados al enrutador de la bóveda subterránea...
-
-<span class="alert-roja">>> ADVERTENCIA: CLAVE CRIPTOGRÁFICA FRAGMENTADA.</span>
->> EXTRACCIÓN DEL BLOQUE [2 DE 4] COMPLETADA: <span class="codigo-bloque">77</span><span class="blink">_</span>`;
-                }
-                else if (input === 'DANTE CRUZ' || input === 'DANTE' || input === 'CRUZ') {
-                    terminal.innerHTML = `>> EXPEDIENTE ENCONTRADO.
-
-<strong>NOMBRES:</strong> DANTE
-<strong>APELLIDOS:</strong> CRUZ
-<strong>ESTADO:</strong> PRÓFUGO / ORDEN DE CAPTURA ACTIVA
-<strong>VÍNCULO:</strong> EX-OPERARIO DE CARGA PORTUARIA (BRAZO ARMADO)
-
->> VULNERACIÓN DE RED AUTORIZADA: Extrayendo metadatos vinculados al enrutador de la bóveda subterránea...
-
-<span class="alert-roja">>> ADVERTENCIA: CLAVE CRIPTOGRÁFICA FRAGMENTADA.</span>
->> EXTRACCIÓN DEL BLOQUE [3 DE 4] COMPLETADA: <span class="codigo-bloque">OMEGA</span><span class="blink">_</span>`;
-                }
-                else if (input === 'LUCAS ZORRILLA' || input === 'LUCAS' || input === 'ZORRILLA') {
-                    terminal.innerHTML = `>> EXPEDIENTE ENCONTRADO.
-
-<strong>NOMBRES:</strong> LUCAS
-<strong>APELLIDOS:</strong> ZORRILLA
-<strong>ESTADO:</strong> PRÓFUGO / INFILTRADO TOPOGRÁFICO
-<strong>VÍNCULO:</strong> EMPLEADO MUNICIPAL (CESADO)
-
->> VULNERACIÓN DE RED AUTORIZADA: Extrayendo metadatos vinculados al enrutador de la bóveda subterránea...
-
-<span class="alert-roja">>> ADVERTENCIA: CLAVE CRIPTOGRÁFICA FRAGMENTADA.</span>
->> EXTRACCIÓN DEL BLOQUE [4 DE 4] COMPLETADA: <span class="codigo-bloque">99X</span><span class="blink">_</span>`;
-                }
-                else if (input === '') {
-                    terminal.innerHTML = `<span class="alert-roja">>> ERROR DE SINTAXIS. SE REQUIERE UN PARÁMETRO DE BÚSQUEDA.</span><span class="blink">_</span>`;
-                } 
-                else {
-                    terminal.innerHTML = `>> BÚSQUEDA FINALIZADA.
->> 0 RESULTADOS ENCONTRADOS PARA: "${inputRaw}".
-
-<span class="alert-roja">>> EL SUJETO NO EXISTE EN LA BASE DE DATOS O NO ESTÁ VINCULADO AL CÓDIGO DE LA BÓVEDA.</span><span class="blink">_</span>`;
-                }
-            }, 1200);
+        function desactivacionExitosa() {
+            juegoTerminado = true;
+            clearInterval(intervaloTimer);
+            
+            agregarLog("> TODOS LOS 6 NODOS ESTABILIZADOS.", "warn");
+            agregarLog("> INICIANDO ESCÁNER DE AMBIENTE...", "warn");
+            
+            setTimeout(() => {
+                document.getElementById('main-interface').style.display = 'none';
+                document.getElementById('win-screen').style.display = 'flex';
+            }, 2000);
         }
     </script>
 </body>
